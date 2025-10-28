@@ -43,4 +43,4 @@ htmlcov/
 .mypy_cache/
 
 outputs/
-temp_repos/
+tmp_repos/

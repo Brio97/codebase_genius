@@ -7,7 +7,7 @@ import streamlit as st;
 import requests;
 import from pathlib { Path }
 
-def bootstrap_frontend(token: str) {
+def bootstrap_frontend() {
     st.set_page_config(
         page_title="Codebase Genius - AI Documentation",
         page_icon="🧠",
@@ -84,7 +84,6 @@ def bootstrap_frontend(token: str) {
                 response = requests.post(
                     "http://localhost:8000/walker/generate_docs",
                     json={"repo_url": repo_url},
-                    headers={"Authorization": f"Bearer {token}"},
                     timeout=300
                 );
 
@@ -128,28 +127,28 @@ def bootstrap_frontend(token: str) {
 
         i = 0;
         for result in st.session_state.results {
-            with st.expander(f"📄 {result.get('repository', 'Unknown')} - Result {i+1}", expanded=(i==0)) {
+            with st.expander(f"📄 {result.get('repo_name', 'Unknown')} - Result {i+1}", expanded=(i==0)) {
                 
                 [col1, col2, col3] = st.columns(3);
                 
                 with col1 {
-                    st.metric("Status", "✅ Success" if result.get("success") else "❌ Failed");
+                    st.metric("Status", "✅ Success" if result.get("status") == "success" else "❌ Failed");
                 }
                 with col2 {
-                    st.metric("Functions", result.get("functions", 0));
+                    st.metric("Symbols", result.get("symbols_count", 0));
                 }
                 with col3 {
-                    st.metric("Classes", result.get("classes", 0));
+                    st.metric("Files", len(result.get("files", [])));
                 }
                 
                 st.markdown("### 📁 Output");
-                output_file = result.get("output");
-                if output_file {
-                    st.code(output_file);
+                output_path = result.get("output_path");
+                if output_path {
+                    st.code(output_path);
                     
                     # Try to show preview
                     try {
-                        doc_path = Path(output_file);
+                        doc_path = Path(output_path);
                         if doc_path.exists() {
                             content = doc_path.read_text();
                             
@@ -159,7 +158,7 @@ def bootstrap_frontend(token: str) {
                             st.download_button(
                                 "⬇️ Download Full Documentation",
                                 data=content,
-                                file_name=f"{result.get('repository')}_docs.md",
+                                file_name=f"{result.get('repo_name')}_docs.md",
                                 mime="text/markdown"
                             );
                         }
@@ -179,39 +178,10 @@ def bootstrap_frontend(token: str) {
 
     # Footer
     st.markdown("---");
-    st.markdown("**Powered by:** 🗺️ RepoMapper • 🔍 CodeAnalyzer • 📝 DocGen");
+    st.markdown("**Powered by:** 🗺️ RepoMapper • 🔍 CodeAnalyzer • 📝 DocGenie");
 }
 
-# Entry point
+# Entry point - No authentication
 with entry {
-    INSTANCE_URL = "http://localhost:8000";
-    USER_EMAIL = "codegenius@example.com";
-    USER_PASSWORD = "genius123";
-
-    # Login or register
-    response = requests.post(
-        f"{INSTANCE_URL}/user/login",
-        json={"email": USER_EMAIL, "password": USER_PASSWORD}
-    );
-
-    if response.status_code != 200 {
-        # Register new user
-        response = requests.post(
-            f"{INSTANCE_URL}/user/create",
-            json={"email": USER_EMAIL, "password": USER_PASSWORD}
-        );
-        
-        # Login again
-        response = requests.post(
-            f"{INSTANCE_URL}/user/create",
-            json={"email": USER_EMAIL, "password": USER_PASSWORD}
-        );
-    }
-
-    if response.status_code == 200 {
-        token = response.json()["token"];
-        bootstrap_frontend(token);
-    } else {
-        st.error("❌ Authentication failed");
-    }
+    bootstrap_frontend();
 }
