@@ -44,3 +44,4 @@ htmlcov/
 
 outputs/
 tmp_repos/.env
+.env

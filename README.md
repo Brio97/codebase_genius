@@ -8,78 +8,138 @@ Codebase Genius automatically analyzes source code repositories, maps their stru
 
 ## 🚀 Overview
 
-This project demonstrates how Jaclang can be used to build an **AI-powered multi-agent system** with a backend and frontend running natively in `.jac` files.
+This project demonstrates how Jaclang can be used to build an **AI-powered multi-agent system** for automatic code documentation generation.
 
-- 🤖 Multi-agent AI design (RepoMapper • CodeAnalyzer • DocGen)
+- 🤖 Multi-agent AI design (RepoMapper • CodeAnalyzer • DocGenie)
 - 🧠 Automatic Markdown documentation generation
-- ⚙️ FastAPI-style backend (via Jac runtime)
+- ⚙️ Jac-based API endpoints with walker architecture
 - 🎨 Streamlit-powered frontend interface
-- 💾 Local database persistence (no external DB required)
+- 📦 Supports Python and Jaclang codebases
 
 ---
 
 ## 🧩 Architecture
 
 | Component | Description |
-|------------|--------------|
-| **backend.jac** | Provides REST endpoints and orchestrates AI agents for repo analysis and documentation generation. |
-| **frontend.jac** | Streamlit-based interface for interacting with the backend and visualizing generated documentation. |
-| **LocalDB** | Used for persistence and caching when `DATABASE_HOST` is not available. |
+|-----------|-------------|
+| **codebase_genius.jac** | Core declarations: data objects (RepoInfo, CodeFileInfo, Symbol), nodes (RepoMapper, CodeAnalyzer, DocGenie), and walkers (CodeGenius, generate_docs) |
+| **codebase_genius.impl.jac** | Implementation logic for all nodes and walkers, including the multi-agent orchestration pipeline |
+| **frontend.jac** | Streamlit-based UI for interacting with the documentation generation system |
+| **tools.jac** | Utility classes (FileParser, ReadmeProcessor) for code parsing and README extraction |
+
+### Multi-Agent Pipeline
+
+```
+User Input → generate_docs walker → CodeGenius orchestrator
+                                           ↓
+                      ┌────────────────────┴────────────────────┐
+                      ↓                    ↓                    ↓
+                RepoMapper          CodeAnalyzer           DocGenie
+              (Clone & Scan)      (Extract Symbols)    (Generate Docs)
+```
 
 ---
 
 ## 🛠️ Setup Instructions
 
-### 1️⃣ Environment Setup
+### 1️⃣ Install Dependencies
 
 ```bash
-# Create a virtual environment
-python -m venv jac-env
-source jac-env/bin/activate
-
-# Install dependencies
-pip install jaclang streamlit requests
+pip install -r requirements.txt
 ```
 
-### 2️⃣ Run the Backend
+This will install:
+- `jaclang` - The Jaclang language runtime
+- `byllm` - AI model integration
+- `gitpython` - Repository cloning
+- `streamlit` - Frontend framework
+- `requests` - HTTP client
+- `python-dotenv` - Environment variable management
+
+### 2️⃣ Optional: Set GitHub Token
+
+For private repositories or to avoid rate limits:
 
 ```bash
-jac serve backend.jac
+export GITHUB_TOKEN=your_github_token_here
 ```
 
-The backend will start on  
-👉 `http://localhost:8000`
+### 3️⃣ Run the Application
 
-### 3️⃣ Run the Frontend
-
+#### Option A: Integrated Mode (Streamlit with Built-in API)
 ```bash
-jac streamlit frontend.jac
+jac run frontend.jac
 ```
 
-The UI will be available on  
-👉 `http://localhost:8501`
+The Streamlit UI will be available at `http://localhost:8501`
+
+#### Option B: Separate API Server (if needed)
+```bash
+# Start the API server
+jac serve codebase_genius.jac
+
+# In another terminal, run the frontend
+jac run frontend.jac
+```
 
 ---
 
 ## 🧠 How It Works
 
-1. User enters a GitHub repository URL in the frontend.  
-2. Backend clones the repository locally.  
-3. AI agents analyze source code (functions, classes, structure).  
-4. Generated Markdown documentation is returned and displayed in the UI.  
+1. **User Input**: Enter a GitHub repository URL in the Streamlit frontend
+2. **RepoMapper Agent**: Clones the repository and scans for Python/Jaclang files
+3. **CodeAnalyzer Agent**: Parses each file and extracts symbols (functions, classes, nodes, walkers)
+4. **DocGenie Agent**: Generates comprehensive Markdown documentation with:
+   - Repository overview
+   - File structure listing
+   - API reference with all symbols
+   - Mermaid architecture diagrams
+   - Installation instructions
+5. **Output**: Documentation saved to `./outputs/{repo_name}/documentation.md`
+
+---
+
+## 📁 Project Structure
+
+```
+codebase-genius/
+├── codebase_genius.jac         # Core type definitions and declarations
+├── codebase_genius.impl.jac    # Agent implementations and orchestration
+├── frontend.jac                # Streamlit UI
+├── tools.jac                   # Parsing utilities
+├── requirements.txt            # Python dependencies
+└── tmp_repos/                  # Cloned repositories (created at runtime)
+└── outputs/                    # Generated documentation (created at runtime)
+```
 
 ---
 
 ## 🧾 Example Output
 
+The system generates documentation like this:
+
 ```markdown
-# Auto-Generated Documentation
+# flask Documentation
 
-This is an AI-generated doc.
+**Generated by Codebase Genius 🧠**
 
-- Repository: flask
-- Functions: 23
-- Classes: 7
+---
+
+## Overview
+A simple framework for building complex web applications.
+
+## Repository Structure
+**Total Files:** 127
+
+## API Reference
+
+### `src/flask/app.py`
+- **Flask** (class) - Line 42
+- **run** (function) - Line 892
+- **route** (function) - Line 156
+
+### Architecture Diagram
+[Mermaid diagram showing class relationships]
 ```
 
 ---
@@ -88,8 +148,26 @@ This is an AI-generated doc.
 
 - **Language:** Jaclang  
 - **Frontend:** Streamlit  
-- **Backend:** FastAPI (Jac runtime)  
-- **AI Agents:** Custom multi-agent logic for code mapping and documentation
+- **AI Integration:** byllm with GPT-4o-mini
+- **Agent Architecture:**
+  - **Nodes:** RepoMapper, CodeAnalyzer, DocGenie
+  - **Walkers:** CodeGenius (orchestrator), generate_docs (API endpoint)
+  - **Objects:** RepoInfo, CodeFileInfo, Symbol, DocOutput
+
+### Key Jaclang Concepts Used
+
+- **Nodes**: Stateful agents that perform specific tasks
+- **Walkers**: Traversal logic that orchestrates multiple nodes
+- **Semantic Annotations**: Type hints for AI-powered data structures
+- **with entry**: Entry point syntax for Streamlit integration
+
+---
+
+## 🚀 Example Repositories to Try
+
+- Flask: `https://github.com/pallets/flask`
+- Requests: `https://github.com/psf/requests`
+- Any Python or Jaclang repository!
 
 ---
 

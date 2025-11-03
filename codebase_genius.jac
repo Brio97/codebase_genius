@@ -46,6 +46,17 @@ obj DocOutput {
     has status: str = "";
 }
 
+# Authentication objects
+obj User {
+    has username: str = "";
+    has password: str = "";
+}
+
+obj TokenResponse {
+    has access_token: str = "";
+    has token_type: str = "bearer";
+}
+
 # Nodes
 node RepoMapper {
     has repo: RepoInfo = RepoInfo();
@@ -79,6 +90,7 @@ walker CodeGenius {
 
 walker generate_docs {
     has repo_url: str;
+    has is_public: bool = True;  # Mark as public
     
     can execute with `root entry;
 }
