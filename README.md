@@ -148,7 +148,7 @@ A simple framework for building complex web applications.
 
 - **Language:** Jaclang  
 - **Frontend:** Streamlit  
-- **AI Integration:** byllm with GPT-4o-mini
+- **AI Integration:** byllm with Gemini 1.5 Flash
 - **Agent Architecture:**
   - **Nodes:** RepoMapper, CodeAnalyzer, DocGenie
   - **Walkers:** CodeGenius (orchestrator), generate_docs (API endpoint)

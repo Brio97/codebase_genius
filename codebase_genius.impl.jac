@@ -57,6 +57,12 @@ impl RepoMapper.clone_and_scan {
     readme_processor = ReadmeProcessor();
     self.repo.readme_summary = readme_processor.process(local_path);
     
+    # Generate and store the file tree
+    tree_gen = FileTreeGenerator();
+    file_tree = tree_gen.generate(local_path, ignore_dirs);
+    self.repo.file_tree = file_tree;
+    print(f"[RepoMapper] Generated file tree");
+
     self.status = "mapped";
 }
 
@@ -100,20 +106,25 @@ impl DocGenie.generate_markdown {
         
         md = md + "## Overview\n\n";
         if repo.readme_summary {
-            md = md + repo.readme_summary + "\n\n";
+            # Use the new AI-powered ability to generate a better overview
+            try {
+                key_symbols = [sym.name for sym in all_symbols[:15]];
+                ai_overview = self.generate_ai_overview(repo.readme_summary, key_symbols);
+                md = md + ai_overview + "\n\n";
+            } except Exception as e {
+                print(f"[DocGenie] ⚠️ AI overview failed: {e}. Falling back to basic summary.");
+                md = md + repo.readme_summary + "\n\n";
+            }
         } else {
             md = md + "Automated documentation for this repository.\n\n";
         }
         
         md = md + "## Repository Structure\n\n";
         md = md + "**Total Files:** " + str(len(repo.files)) + "\n\n";
-        md = md + "```\n";
-        for file_path in repo.files[:20] {
-            md = md + file_path + "\n";
-        }
-        if len(repo.files) > 20 {
-            md = md + "... and " + str(len(repo.files) - 20) + " more files\n";
-        }
+        
+        # Add the generated file tree to the documentation
+        md = md + "```text\n";
+        md = md + repo.file_tree + "\n";
         md = md + "```\n\n";
         
         md = md + "## API Reference\n\n";
@@ -145,15 +156,45 @@ impl DocGenie.generate_markdown {
         }
         
         md = md + "## Architecture Diagram\n\n";
+        # This is a great place to use `by llm` in the future to generate
+        # a more intelligent diagram based on symbol relationships.
+        # For example: `diagram_code by llm(f"Generate a Mermaid sequence diagram for: {all_symbols}");`
+
         md = md + "```mermaid\n";
         md = md + "graph TD\n";
         
-        for sym in all_symbols[:20] {
+        # Create a set of all defined symbols for filtering calls
+        defined_symbols = {s.get("name") if isinstance(s, dict) else s.name for s in all_symbols};
+
+        for sym in all_symbols {
             sym_type = sym.get("type") if isinstance(sym, dict) else sym.type;
             sym_name = sym.get("name") if isinstance(sym, dict) else sym.name;
             
-            if sym_type in ["class", "node", "walker"] {
+            # Add nodes for major components
+            if sym_type in ["class", "node", "walker", "function"] {
                 md = md + "    " + sym_name + "[" + sym_name + "]\n";
+            }
+
+            # Add edges for relationships (calls and inheritance)
+            # This check is robust for both dicts and objects
+            is_dict = isinstance(sym, dict);
+            
+            if sym_type == "function" and (is_dict and "calls" in sym) {
+                if sym.get("calls") {
+                    for call in sym.get("calls") {
+                        if call in defined_symbols {
+                            md = md + "    " + sym_name + " --> " + call + "\n";
+                        }
+                    }
+                }
+            }
+            
+            if sym_type == "class" and (is_dict and "inherits" in sym) {
+                if sym.get("inherits") {
+                    for parent in sym.get("inherits") {
+                        md = md + "    " + parent + " --|> " + sym_name + "\n";
+                    }
+                }
             }
         }
         

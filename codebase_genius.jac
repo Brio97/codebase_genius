@@ -3,13 +3,13 @@ Codebase Genius - Multi-Agent Documentation System
 Main declarations
 """
 
-import from byllm.lib { Model }
+import from byllm.llm { Model }
 import from pathlib { Path }
-import from tools { FileParser, ReadmeProcessor }
+import from tools { FileParser, ReadmeProcessor, FileTreeGenerator }
 import git;
 import os;
 
-glob llm = Model(model_name="gpt-4o-mini");
+glob llm = Model(model_name="gemini/gemini-2.0-flash", temperature=0.2);
 
 # Semantic annotations
 sem RepoInfo = "GitHub repository information and metadata";
@@ -24,6 +24,7 @@ obj RepoInfo {
     has local_path: str = "";
     has readme_summary: str = "";
     has files: list = [];
+    has file_tree: str = "";
 }
 
 obj CodeFileInfo {
@@ -76,6 +77,9 @@ node DocGenie {
     has output: DocOutput = DocOutput();
     
     def generate_markdown(repo: RepoInfo, all_symbols: list);
+
+    """Given a README summary and a list of key code symbols, write a concise, one-paragraph overview of the software project's main purpose and key features."""
+    def generate_ai_overview(readme_summary: str, key_symbols: list[str]) -> str by llm();
 }
 
 # Walkers
